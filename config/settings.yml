@@ -1,5 +1,4 @@
 env: "dev"
-token_ttl: 1h
 
 grpc:
   port: 50051

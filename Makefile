@@ -16,7 +16,7 @@ build:
 
 run: build
 	@echo "running the application..."
-	@./bin/sso --config=./config/settings.yaml
+	@./bin/order-manager # --config=./config/settings.yml
 
 test:
 	@echo "running tests..."
