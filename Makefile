@@ -1,4 +1,9 @@
-.PHONY: proto build run test clean
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
+.PHONY: proto build run run-config test clean
 
 proto:
 	@echo "generating proto files..."
@@ -16,7 +21,11 @@ build:
 
 run: build
 	@echo "running the application..."
-	@./bin/order-manager # --config=./config/settings.yml
+	@./bin/order-manager
+
+run-config: build
+	@echo "running the application with a config file..."
+	@./bin/order-manager --config=./config/settings.yml
 
 test:
 	@echo "running tests..."

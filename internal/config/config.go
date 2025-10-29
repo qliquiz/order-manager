@@ -3,26 +3,37 @@ package config
 import (
 	"flag"
 	"github.com/ilyakaznacheev/cleanenv"
+	"log"
 	"os"
 	"time"
 )
 
 type Config struct {
-	Env  string     `yaml:"env" env-required:"true"`
+	Env  string     `yaml:"env" env:"ENV" env-required:"true"`
 	GRPC GRPCConfig `yaml:"grpc"`
 }
 
 type GRPCConfig struct {
-	Port    int           `yaml:"port"`
-	Timeout time.Duration `yaml:"timeout"`
+	Port    int           `yaml:"port" env:"GRPC_PORT" env-default:"8080"`
+	Timeout time.Duration `yaml:"timeout" env:"GRPC_TIMEOUT" env-default:"5s"`
 }
 
 func MustLoad() *Config {
-	/*path := fetchConfigPath()
+	var cfg Config
+
+	err := cleanenv.ReadEnv(&cfg)
+	if err != nil {
+		log.Fatalf("couldn't read the configuration: %v", err)
+	}
+
+	return &cfg
+}
+
+func MustLoadYML() *Config {
+	path := fetchConfigPath()
 	if path == "" {
 		panic("config path is empty")
-	}*/
-	path := "./config/settings.yml"
+	}
 
 	return MustLoadByPath(path)
 }

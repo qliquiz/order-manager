@@ -1,20 +1,19 @@
 package app
 
 import (
-	grpcapp "349877-artemkagor05-course-1478/internal/app/grpc"
-	orderstore "349877-artemkagor05-course-1478/internal/storage/order"
+	grpcApp "349877-artemkagor05-course-1478/internal/app/grpc"
+	orderStore "349877-artemkagor05-course-1478/internal/storage/order"
+	"log/slog"
 )
 
 type App struct {
-	GrpcApp *grpcapp.App
+	GrpcApp *grpcApp.App
 }
 
-func New(grpcPort int) *App {
-	storage := orderstore.New()
+func New(log *slog.Logger, grpcPort int) *App {
+	storage := orderStore.New()
 
-	grpcApp := grpcapp.New(storage, grpcPort)
+	GrpcApp := grpcApp.New(storage, log, grpcPort)
 
-	return &App{
-		GrpcApp: grpcApp,
-	}
+	return &App{GrpcApp}
 }
