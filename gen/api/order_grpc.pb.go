@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: order.proto
 
-package test
+package api
 
 import (
 	context "context"

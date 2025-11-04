@@ -1,7 +1,7 @@
 package orderservice
 
 import (
-	pb "349877-artemkagor05-course-1478/api/gen"
+	pb "349877-artemkagor05-course-1478/gen/api"
 	"349877-artemkagor05-course-1478/internal/storage/order"
 	"context"
 	"errors"

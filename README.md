@@ -32,7 +32,8 @@
 #### Переменные окружения
 
 - `ENV`: Среда выполнения (например, `dev`, `prod`). **Обязательная**.
-- `GRPC_PORT`: Порт для gRPC сервера (по умолчанию `8080`).
+- `GRPC_PORT`: Порт для gRPC сервера (по умолчанию `8081`).
+- `GATEWAY_PORT`: Порт для gRPC шлюза (по умолчанию `8080`).
 - `GRPC_TIMEOUT`: Таймаут для gRPC соединений (по умолчанию `5s`).
 - `CONFIG_PATH`: Путь к файлу конфигурации `settings.yml`.
 
@@ -47,6 +48,9 @@ env: "dev"
 grpc:
   port: 50051
   timeout: 1h
+
+gateway:
+   port: 8080
 ```
 
 ### Запуск приложения
@@ -72,6 +76,7 @@ grpc:
 ```bash
 export ENV="dev"
 export GRPC_PORT=50051
+export GATEWAY_PORT=8080
 export GRPC_TIMEOUT=10s
 make run
 ```

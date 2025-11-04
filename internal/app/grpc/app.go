@@ -44,12 +44,14 @@ func (a *App) MustRun() {
 }
 
 func (a *App) run() error {
+	const op = "grpcapp.run"
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	a.log.Info("grpc server is running %s", lis.Addr().String())
+	a.log.With(slog.String("op", op)).
+		Info("grpc server is running %s", lis.Addr().String())
 
 	if err = a.gRPCServer.Serve(lis); err != nil {
 		return fmt.Errorf("%w", err)
@@ -60,7 +62,6 @@ func (a *App) run() error {
 
 func (a *App) Stop(ctx context.Context) error {
 	const op = "grpcapp.Stop"
-
 	a.log.With(slog.String("op", op)).
 		Info("stopping gRPC server")
 

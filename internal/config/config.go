@@ -9,13 +9,18 @@ import (
 )
 
 type Config struct {
-	Env  string     `yaml:"env" env:"ENV" env-required:"true"`
-	GRPC GRPCConfig `yaml:"grpc"`
+	Env     string        `yaml:"env" env:"ENV" env-required:"true"`
+	GRPC    GRPCConfig    `yaml:"grpc"`
+	Gateway GatewayConfig `yaml:"gateway"`
 }
 
 type GRPCConfig struct {
-	Port    int           `yaml:"port" env:"GRPC_PORT" env-default:"8080"`
+	Port    int           `yaml:"port" env:"GRPC_PORT" env-default:"8081"`
 	Timeout time.Duration `yaml:"timeout" env:"GRPC_TIMEOUT" env-default:"5s"`
+}
+
+type GatewayConfig struct {
+	Port int `yaml:"port" env:"GATEWAY_PORT" env-default:"8080"`
 }
 
 func MustLoad() *Config {

@@ -24,8 +24,9 @@ func main() {
 	log := setupLogger(cfg.Env)
 	log.Info("starting application...")
 
-	application := app.New(log, cfg.GRPC.Port)
+	application := app.New(log, cfg.GRPC.Port, cfg.Gateway.Port)
 	go application.GrpcApp.MustRun()
+	go application.GatewayApp.MustRun()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
@@ -36,11 +37,14 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	if err := application.GatewayApp.Stop(shutdownCtx); err != nil {
+		log.Error("gateway shutdown error", "err", err)
+	}
 	if err := application.GrpcApp.Stop(shutdownCtx); err != nil {
 		log.Error("application shutdown error", "err", err)
 	}
 
-	log.Info("application stopped")
+	log.Info("Server Stopped")
 }
 
 func setupLogger(env string) *slog.Logger {

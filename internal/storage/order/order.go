@@ -1,7 +1,7 @@
 package orderstore
 
 import (
-	pb "349877-artemkagor05-course-1478/api/gen"
+	pb "349877-artemkagor05-course-1478/gen/api"
 	"context"
 	"errors"
 	"github.com/google/uuid"
