@@ -2,12 +2,13 @@ package orderservice
 
 import (
 	pb "349877-artemkagor05-course-1478/gen/api"
-	"349877-artemkagor05-course-1478/internal/storage/order"
+	orderrepo "349877-artemkagor05-course-1478/internal/repository/order"
 	"context"
 	"errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 type Order interface {
@@ -20,16 +21,18 @@ type Order interface {
 
 type OrderService struct {
 	pb.UnimplementedOrderServiceServer
-	order Order
+	repo    orderrepo.OrderRepository
+	timeout time.Duration
 }
 
-func Register(gRPC *grpc.Server, order Order) {
-	pb.RegisterOrderServiceServer(gRPC, New(order))
+func Register(gRPC *grpc.Server, repo *orderrepo.OrderRepository, timeout time.Duration) {
+	pb.RegisterOrderServiceServer(gRPC, New(*repo, timeout))
 }
 
-func New(order Order) *OrderService {
+func New(repo orderrepo.OrderRepository, timeout time.Duration) *OrderService {
 	return &OrderService{
-		order: order,
+		repo:    repo,
+		timeout: timeout,
 	}
 }
 
@@ -41,9 +44,12 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *pb.CreateOrderReque
 		return nil, status.Error(codes.InvalidArgument, "quantity must be positive")
 	}
 
-	id, err := s.order.CreateOrder(ctx, req.GetItem(), req.GetQuantity())
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	id, err := s.repo.CreateOrder(ctx, req.GetItem(), req.GetQuantity())
 	if err != nil {
-		if errors.Is(err, orderstore.ErrOrderAlreadyExists) {
+		if errors.Is(err, orderrepo.ErrOrderAlreadyExists) {
 			return nil, status.Errorf(codes.AlreadyExists, "order with item '%s' already exists", req.GetItem())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to create order: %v", err)
@@ -57,9 +63,12 @@ func (s *OrderService) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "id cannot be empty")
 	}
 
-	order, err := s.order.GetOrder(ctx, req.GetId())
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	order, err := s.repo.GetOrder(ctx, req.GetId())
 	if err != nil {
-		if errors.Is(err, orderstore.ErrOrderNotFound) {
+		if errors.Is(err, orderrepo.ErrOrderNotFound) {
 			return nil, status.Errorf(codes.NotFound, "order with id '%s' does not exists", req.GetId())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get order: %v", err)
@@ -76,9 +85,12 @@ func (s *OrderService) UpdateOrder(ctx context.Context, req *pb.UpdateOrderReque
 		return nil, status.Error(codes.InvalidArgument, "quantity must be positive")
 	}
 
-	order, err := s.order.UpdateOrder(ctx, req.GetId(), req.GetItem(), req.GetQuantity())
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	order, err := s.repo.UpdateOrder(ctx, req.GetId(), req.GetItem(), req.GetQuantity())
 	if err != nil {
-		if errors.Is(err, orderstore.ErrOrderNotFound) {
+		if errors.Is(err, orderrepo.ErrOrderNotFound) {
 			return nil, status.Errorf(codes.NotFound, "order with id '%s' does not exists", req.GetId())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to update order: %v", err)
@@ -92,9 +104,12 @@ func (s *OrderService) DeleteOrder(ctx context.Context, req *pb.DeleteOrderReque
 		return nil, status.Error(codes.InvalidArgument, "id cannot be empty")
 	}
 
-	err := s.order.DeleteOrder(ctx, req.GetId())
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	err := s.repo.DeleteOrder(ctx, req.GetId())
 	if err != nil {
-		if errors.Is(err, orderstore.ErrOrderNotFound) {
+		if errors.Is(err, orderrepo.ErrOrderNotFound) {
 			return nil, status.Errorf(codes.NotFound, "order with id '%s' does not exists", req.GetId())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to delete order: %v", err)
@@ -103,8 +118,11 @@ func (s *OrderService) DeleteOrder(ctx context.Context, req *pb.DeleteOrderReque
 	return &pb.DeleteOrderResponse{Success: true}, nil
 }
 
-func (s *OrderService) ListOrders(ctx context.Context, req *pb.ListOrdersRequest) (*pb.ListOrdersResponse, error) {
-	orders := s.order.ListOrders(ctx)
+func (s *OrderService) ListOrders(ctx context.Context, _ *pb.ListOrdersRequest) (*pb.ListOrdersResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
+	orders := s.repo.ListOrders(ctx)
 
 	return &pb.ListOrdersResponse{Orders: orders}, nil
 }

@@ -3,8 +3,10 @@ package app
 import (
 	"349877-artemkagor05-course-1478/internal/app/gateway"
 	grpcApp "349877-artemkagor05-course-1478/internal/app/grpc"
-	orderStore "349877-artemkagor05-course-1478/internal/storage/order"
+	orderrepo "349877-artemkagor05-course-1478/internal/repository/order"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"log/slog"
+	"time"
 )
 
 type App struct {
@@ -12,10 +14,10 @@ type App struct {
 	GatewayApp *gateway.App
 }
 
-func New(log *slog.Logger, grpcPort int, gatewayPort int) *App {
-	storage := orderStore.New()
+func New(db *pgxpool.Pool, log *slog.Logger, grpcPort int, gatewayPort int, timeout time.Duration) *App {
+	repo := orderrepo.New(db)
 
-	grpcApplication := grpcApp.New(storage, log, grpcPort)
+	grpcApplication := grpcApp.New(repo, log, grpcPort, timeout)
 	gatewayApplication := gateway.New(log, gatewayPort, grpcPort)
 
 	return &App{

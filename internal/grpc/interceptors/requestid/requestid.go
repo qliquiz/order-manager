@@ -7,7 +7,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-const HeaderRequestID = "x-request-id"
+type HeaderRequestID string
+
+const HeaderRequestIDKey HeaderRequestID = "x-request-id"
 
 func Unary() grpc.UnaryServerInterceptor {
 	return func(
@@ -20,7 +22,7 @@ func Unary() grpc.UnaryServerInterceptor {
 		var requestID string
 
 		if ok {
-			values := md.Get(HeaderRequestID)
+			values := md.Get(string(HeaderRequestIDKey))
 			if len(values) > 0 {
 				requestID = values[0]
 			}
@@ -29,9 +31,9 @@ func Unary() grpc.UnaryServerInterceptor {
 			requestID = uuid.New().String()
 		}
 
-		ctx = context.WithValue(ctx, HeaderRequestID, requestID)
+		ctx = context.WithValue(ctx, HeaderRequestIDKey, requestID)
 
-		err := grpc.SetHeader(ctx, metadata.Pairs(HeaderRequestID, requestID))
+		err := grpc.SetHeader(ctx, metadata.Pairs(string(HeaderRequestIDKey), requestID))
 		if err != nil {
 			return nil, err
 		}

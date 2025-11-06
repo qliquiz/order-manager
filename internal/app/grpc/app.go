@@ -3,12 +3,14 @@ package grpcapp
 import (
 	interceptorLog "349877-artemkagor05-course-1478/internal/grpc/interceptors/log"
 	interceptorRequestID "349877-artemkagor05-course-1478/internal/grpc/interceptors/requestid"
+	orderrepo "349877-artemkagor05-course-1478/internal/repository/order"
 	orderService "349877-artemkagor05-course-1478/internal/service/order"
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
 	"log/slog"
 	"net"
+	"time"
 )
 
 type App struct {
@@ -17,7 +19,7 @@ type App struct {
 	port       int
 }
 
-func New(order orderService.Order, log *slog.Logger, port int) *App {
+func New(order *orderrepo.OrderRepository, log *slog.Logger, port int, timeout time.Duration) *App {
 	reqIDInterceptor := interceptorRequestID.Unary()
 	logInterceptor := interceptorLog.Unary(log)
 
@@ -28,7 +30,7 @@ func New(order orderService.Order, log *slog.Logger, port int) *App {
 		),
 	)
 
-	orderService.Register(gRPCServer, order)
+	orderService.Register(gRPCServer, order, timeout)
 
 	return &App{
 		gRPCServer,
@@ -51,7 +53,7 @@ func (a *App) run() error {
 	}
 
 	a.log.With(slog.String("op", op)).
-		Info("grpc server is running %s", lis.Addr().String())
+		Info("grpc server is running %s", "addr", lis.Addr().String())
 
 	if err = a.gRPCServer.Serve(lis); err != nil {
 		return fmt.Errorf("%w", err)

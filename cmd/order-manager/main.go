@@ -4,7 +4,9 @@ import (
 	"349877-artemkagor05-course-1478/internal/app"
 	"349877-artemkagor05-course-1478/internal/config"
 	"349877-artemkagor05-course-1478/internal/lib/logger/handlers/slogpretty"
+	"349877-artemkagor05-course-1478/internal/postgres"
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -21,10 +23,15 @@ const (
 func main() {
 	cfg := config.MustLoad()
 
+	db, err := postgres.New(cfg.DB)
+	if err != nil {
+		panic(fmt.Errorf("failed to connect to the database: %w", err))
+	}
+
 	log := setupLogger(cfg.Env)
 	log.Info("starting application...")
 
-	application := app.New(log, cfg.GRPC.Port, cfg.Gateway.Port)
+	application := app.New(db.Pool, log, cfg.GRPC.Port, cfg.Gateway.Port, cfg.GRPC.Timeout)
 	go application.GrpcApp.MustRun()
 	go application.GatewayApp.MustRun()
 
@@ -37,12 +44,14 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := application.GatewayApp.Stop(shutdownCtx); err != nil {
+	if err = application.GatewayApp.Stop(shutdownCtx); err != nil {
 		log.Error("gateway shutdown error", "err", err)
 	}
-	if err := application.GrpcApp.Stop(shutdownCtx); err != nil {
+	if err = application.GrpcApp.Stop(shutdownCtx); err != nil {
 		log.Error("application shutdown error", "err", err)
 	}
+	db.Close()
+	log.Info("database connection pool closed")
 
 	log.Info("Server Stopped")
 }

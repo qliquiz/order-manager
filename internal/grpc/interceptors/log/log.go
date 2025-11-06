@@ -15,7 +15,7 @@ func Unary(log *slog.Logger) grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-		reqID, _ := ctx.Value(requestid.HeaderRequestID).(string)
+		reqID, _ := ctx.Value(requestid.HeaderRequestIDKey).(string)
 
 		log = log.With(
 			slog.String("method", info.FullMethod),

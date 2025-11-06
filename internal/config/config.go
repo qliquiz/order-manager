@@ -1,17 +1,17 @@
 package config
 
 import (
-	"flag"
+	"349877-artemkagor05-course-1478/internal/postgres"
 	"github.com/ilyakaznacheev/cleanenv"
 	"log"
-	"os"
 	"time"
 )
 
 type Config struct {
-	Env     string        `yaml:"env" env:"ENV" env-required:"true"`
-	GRPC    GRPCConfig    `yaml:"grpc"`
-	Gateway GatewayConfig `yaml:"gateway"`
+	Env     string            `yaml:"env" env:"ENV" env-required:"true"`
+	GRPC    GRPCConfig        `yaml:"grpc"`
+	Gateway GatewayConfig     `yaml:"gateway"`
+	DB      postgres.DbConfig `yaml:"db"`
 }
 
 type GRPCConfig struct {
@@ -34,7 +34,7 @@ func MustLoad() *Config {
 	return &cfg
 }
 
-func MustLoadYML() *Config {
+/*func MustLoad() *Config {
 	path := fetchConfigPath()
 	if path == "" {
 		panic("config path is empty")
@@ -70,4 +70,4 @@ func fetchConfigPath() string {
 	}
 
 	return res
-}
+}*/

@@ -3,7 +3,7 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-.PHONY: proto build run run-config test clean
+.PHONY: proto lint compose build run run-with-db-in-docker db migrate-up migrate-down clean
 
 proto:
 	@echo "generating proto files..."
@@ -17,21 +17,41 @@ proto:
      		api/*.proto
 	@echo "proto files generated successfully."
 
+lint:
+	@echo "running linter..."
+	@golangci-lint run -v
+
+compose:
+	@echo "running docker compose..."
+	@docker-compose up --build -d
+
 build:
 	@echo "building the application..."
-	@go build -o ./bin/order-manager ./cmd/order-manager/main.go
+	@go build -o ./bin/order-manager ./cmd/order-manager
 
-run: build
+run: build migrate-up
 	@echo "running the application..."
 	@./bin/order-manager
 
-run-config: build
-	@echo "running the application with a config file..."
-	@./bin/order-manager --config=./config/settings.yml
+run-with-db-in-docker: build db migrate-up
+	@echo "running the application..."
+	@./bin/order-manager
 
-test:
-	@echo "running tests..."
-	@go test ./tests
+db:
+	@echo "upping the DB in Docker..."
+	@docker-compose up --build -d db
+
+migrate-up:
+	@echo "applying migrations..."
+	@go run ./cmd/migrator \
+		--migrations-path=./migrations \
+		--command=up
+
+migrate-down:
+	@echo "rolling the latest migration back..."
+	@go run ./cmd/migrator \
+		--migrations-path=./migrations \
+		--command=down
 
 clean:
 	@echo "cleaning up..."

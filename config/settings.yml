@@ -1,9 +1,0 @@
-# === Example ===
-env: "local"
-
-grpc:
-  port: 50051
-  timeout: 5s
-
-gateway:
-  port: 8080
