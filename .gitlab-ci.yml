@@ -3,8 +3,21 @@ stages:
   - test
   - build
 
+.go-setup:
+  before_script:
+    - apk add --no-cache git make gcc musl-dev
+    - go mod download
+    - go mod tidy
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .go/pkg/mod
+
 lint:
   stage: lint
+  extends: .go-setup
   image: golangci/golangci-lint:v2.6.1-alpine
   script:
     - golangci-lint run -v
