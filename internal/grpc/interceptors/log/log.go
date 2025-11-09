@@ -17,7 +17,7 @@ func Unary(log *slog.Logger) grpc.UnaryServerInterceptor {
 	) (interface{}, error) {
 		reqID, _ := ctx.Value(requestid.HeaderRequestIDKey).(string)
 
-		log = log.With(
+		reqLog := log.With(
 			slog.String("method", info.FullMethod),
 			slog.String("request_id", reqID),
 		)
@@ -27,13 +27,13 @@ func Unary(log *slog.Logger) grpc.UnaryServerInterceptor {
 		duration := time.Since(startTime)
 
 		if err != nil {
-			log.Error("request failed",
+			reqLog.Error("request failed",
 				slog.Any("request", req),
 				slog.String("error", err.Error()),
 				slog.Duration("duration", duration),
 			)
 		} else {
-			log.Info("request completed",
+			reqLog.Debug("request completed",
 				slog.Any("request", req),
 				slog.Any("response", resp),
 				slog.Duration("duration", duration),

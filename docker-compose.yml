@@ -3,7 +3,7 @@ services:
     build:
       context: .
       target: order-manager
-    container_name: order-manager-app
+    container_name: order_manager_app
     ports:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
     environment:
@@ -20,10 +20,12 @@ services:
         condition: service_completed_successfully
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
   db:
     image: postgres:17
-    container_name: orders_postgres_container
+    container_name: orders_postgres
     restart: always
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
@@ -43,7 +45,7 @@ services:
     build:
       context: .
       target: migrator
-    container_name: orders-migrator
+    container_name: orders_migrator
     command: ["-command", "up"]
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST}
@@ -55,6 +57,26 @@ services:
       db:
         condition: service_healthy
 
+  redis:
+    image: redis:7-alpine
+    container_name: orders_redis
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
     driver: local

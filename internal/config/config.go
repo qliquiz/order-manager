@@ -2,6 +2,7 @@ package config
 
 import (
 	"349877-artemkagor05-course-1478/internal/postgres"
+	"349877-artemkagor05-course-1478/internal/redis"
 	"github.com/ilyakaznacheev/cleanenv"
 	"log"
 	"time"
@@ -11,6 +12,7 @@ type Config struct {
 	Env     string            `yaml:"env" env:"ENV" env-required:"true"`
 	GRPC    GRPCConfig        `yaml:"grpc"`
 	Gateway GatewayConfig     `yaml:"gateway"`
+	Redis   redis.RedConfig   `yaml:"redis"`
 	DB      postgres.DbConfig `yaml:"db"`
 }
 

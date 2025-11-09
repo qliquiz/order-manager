@@ -2,9 +2,11 @@ package main
 
 import (
 	"349877-artemkagor05-course-1478/internal/app"
+	"349877-artemkagor05-course-1478/internal/cache"
 	"349877-artemkagor05-course-1478/internal/config"
 	"349877-artemkagor05-course-1478/internal/lib/logger/handlers/slogpretty"
 	"349877-artemkagor05-course-1478/internal/postgres"
+	"349877-artemkagor05-course-1478/internal/redis"
 	"context"
 	"fmt"
 	"log/slog"
@@ -23,6 +25,18 @@ const (
 func main() {
 	cfg := config.MustLoad()
 
+	initCtx := context.Background()
+	redisClient, err := redis.New(initCtx, cfg.Redis)
+	if err != nil {
+		fmt.Printf("failed to initialize redis client: %e", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err = redisClient.Close(); err != nil {
+			fmt.Printf("failed to close redis connection: %e", err)
+		}
+	}()
+
 	db, err := postgres.New(cfg.DB)
 	if err != nil {
 		panic(fmt.Errorf("failed to connect to the database: %w", err))
@@ -31,7 +45,7 @@ func main() {
 	log := setupLogger(cfg.Env)
 	log.Info("starting application...")
 
-	application := app.New(db.Pool, log, cfg.GRPC.Port, cfg.Gateway.Port, cfg.GRPC.Timeout)
+	application := app.New(db.Pool, cache.New(redisClient), log, cfg.GRPC.Port, cfg.Gateway.Port, cfg.GRPC.Timeout)
 	go application.GrpcApp.MustRun()
 	go application.GatewayApp.MustRun()
 

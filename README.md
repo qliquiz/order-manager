@@ -7,7 +7,7 @@
 ## Технологический стек
 
 - **Язык:** Go
-- **База данных:** PostgreSQL
+- **База данных:** PostgreSQL + Redis (кеш)
 - **API:** gRPC, HTTP (gRPC-Gateway)
 - **Контейнеризация:** Docker, Docker Compose
 - **Сборка и управление:** Makefile
@@ -47,6 +47,10 @@ POSTGRES_PORT=5432
 POSTGRES_DB=lms_orders
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=mysecretpassword
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_PASSWORD=redis
 ```
 **Важно:** Значение `POSTGRES_HOST` отличается для запуска в Docker (`db`) и локально (`localhost`).
 

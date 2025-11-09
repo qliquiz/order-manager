@@ -1,6 +1,7 @@
 package grpcapp
 
 import (
+	"349877-artemkagor05-course-1478/internal/cache"
 	interceptorLog "349877-artemkagor05-course-1478/internal/grpc/interceptors/log"
 	interceptorRequestID "349877-artemkagor05-course-1478/internal/grpc/interceptors/requestid"
 	orderrepo "349877-artemkagor05-course-1478/internal/repository/order"
@@ -19,7 +20,13 @@ type App struct {
 	port       int
 }
 
-func New(order *orderrepo.OrderRepository, log *slog.Logger, port int, timeout time.Duration) *App {
+func New(
+	repo *orderrepo.OrderRepository,
+	cache *cache.OrderCache,
+	log *slog.Logger,
+	port int,
+	timeout time.Duration,
+) *App {
 	reqIDInterceptor := interceptorRequestID.Unary()
 	logInterceptor := interceptorLog.Unary(log)
 
@@ -30,7 +37,7 @@ func New(order *orderrepo.OrderRepository, log *slog.Logger, port int, timeout t
 		),
 	)
 
-	orderService.Register(gRPCServer, order, timeout)
+	orderService.Register(gRPCServer, repo, cache, log, timeout)
 
 	return &App{
 		gRPCServer,
